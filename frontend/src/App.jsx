@@ -7,7 +7,13 @@ import PanelGrid from './components/PanelGrid';
 import PanelDetailModal from './components/PanelDetailModal';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import StatusBreakdown from './components/StatusBreakdown';
+import ImageUpload from './components/ImageUpload';
+import SettingsPanel from './components/SettingsPanel';
+import HardwareStatus from './components/HardwareStatus';
+import WorkOrders from './components/WorkOrders';
+import DiagnosticsPanel from './components/DiagnosticsPanel';
 import LandingPage from './pages/LandingPage';
+import Chatbot from './components/Chatbot';
 import { database, ref, onValue } from './services/firebase';
 import './index.css';
 import './pages/LandingPage.css';
@@ -75,6 +81,37 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const UploadIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+    <polyline points="17 8 12 3 7 8"/>
+    <line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+);
+
+const HardwareIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" opacity="0.15"/>
+    <rect x="4" y="4" width="16" height="16" rx="2"/>
+    <circle cx="9" cy="9" r="1" fill="currentColor"/>
+    <circle cx="15" cy="9" r="1" fill="currentColor"/>
+    <circle cx="9" cy="15" r="1" fill="currentColor"/>
+    <circle cx="15" cy="15" r="1" fill="currentColor"/>
+  </svg>
+);
+
+const WorkOrderIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+  </svg>
+);
+
+const DiagnosticsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+  </svg>
+);
+
 const RefreshIcon = ({ spinning }) => (
   <svg 
     viewBox="0 0 24 24" 
@@ -115,7 +152,11 @@ function Sidebar({ alertCount, activeView, onViewChange }) {
   const navItems = [
     { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard' },
     { key: 'solar-array', icon: SolarPanelIcon, label: 'Solar Array' },
+    { key: 'diagnostics', icon: DiagnosticsIcon, label: 'Diagnostics' },
     { key: 'analytics', icon: ChartIcon, label: 'Analytics' },
+    { key: 'upload', icon: UploadIcon, label: 'AI Analysis' },
+    { key: 'hardware', icon: HardwareIcon, label: 'Hardware' },
+    { key: 'work-orders', icon: WorkOrderIcon, label: 'Work Orders' },
     { key: 'alerts', icon: AlertIcon, label: 'Alerts', badge: alertCount },
     { key: 'settings', icon: SettingsIcon, label: 'Settings' },
   ];
@@ -486,7 +527,11 @@ export default function App() {
   const viewConfig = {
     'dashboard': { title: 'Solar Farm Dashboard', subtitle: null },
     'solar-array': { title: 'Solar Panel Array', subtitle: 'Real-time panel monitoring and diagnostics' },
+    'diagnostics': { title: 'AI Diagnostics Center', subtitle: 'System health monitoring and predictive analysis' },
     'analytics': { title: 'Analytics & Reports', subtitle: 'Performance metrics and trend analysis' },
+    'upload': { title: 'AI Image Analysis', subtitle: 'Upload thermal/visual images for AI diagnostics' },
+    'hardware': { title: 'Hardware Infrastructure', subtitle: 'Connected devices and data pipeline status' },
+    'work-orders': { title: 'Work Orders', subtitle: 'Maintenance task management and field operations' },
     'alerts': { title: 'Alert Management', subtitle: `${activeAlerts.length} active alerts requiring attention` },
     'settings': { title: 'System Settings', subtitle: 'Configure application preferences' },
   };
@@ -564,7 +609,43 @@ export default function App() {
         );
 
       case 'settings':
-        return <SettingsView />;
+        return <SettingsPanel isOpen={true} onClose={() => setActiveView('dashboard')} />;
+
+      case 'upload':
+        return (
+          <div className="grid grid-cols-12">
+            <div className="col-span-12">
+              <ImageUpload />
+            </div>
+          </div>
+        );
+
+      case 'diagnostics':
+        return (
+          <div className="grid grid-cols-12">
+            <div className="col-span-12">
+              <DiagnosticsPanel />
+            </div>
+          </div>
+        );
+
+      case 'hardware':
+        return (
+          <div className="grid grid-cols-12">
+            <div className="col-span-12">
+              <HardwareStatus />
+            </div>
+          </div>
+        );
+
+      case 'work-orders':
+        return (
+          <div className="grid grid-cols-12">
+            <div className="col-span-12">
+              <WorkOrders />
+            </div>
+          </div>
+        );
 
       default:
         return null;
@@ -628,6 +709,9 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Chatbot - Only show on dashboard, not landing page */}
+      {!showLanding && <Chatbot />}
 
       <AnimatePresence>
         {selectedPanel && (

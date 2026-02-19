@@ -22,6 +22,10 @@
   --bg-card: #16161f;
   --bg-hover: #1e1e2a;
   --bg-active: #252533;
+  --bg-primary: #12121a;
+  --bg-tertiary: #1a1a24;
+  --accent-primary: #f59e0b;
+  --accent: #f59e0b;
   
   /* Border Colors */
   --border-subtle: rgba(255, 255, 255, 0.06);

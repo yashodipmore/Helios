@@ -1,0 +1,403 @@
+/*
+ * HELIOS AUTH — Stripe-inspired enterprise login
+ * All classes prefixed "ha-" to avoid global theme conflicts
+ */
+
+/* ─── OVERLAY ─── */
+.ha-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f6f9fc !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── CARD (BIGGER) ─── */
+.ha-card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff !important;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(50, 50, 93, 0.1),
+    0 2px 5px rgba(50, 50, 93, 0.1),
+    0 1px 1px rgba(0, 0, 0, 0.07);
+  padding: 52px 48px;
+  position: relative;
+  text-align: center;
+}
+
+/* ─── CLOSE ─── */
+.ha-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8898aa !important;
+  padding: 0;
+  transition: background 150ms, color 150ms;
+}
+
+.ha-close:hover {
+  background: #f6f9fc !important;
+  color: #32325d !important;
+}
+
+/* ─── LOGO ─── */
+.ha-logo {
+  margin-bottom: 28px;
+}
+
+/* ─── TITLES ─── */
+.ha-title {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #32325d !important;
+  margin: 0 0 10px !important;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  text-align: center;
+  background: none !important;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+.ha-subtitle {
+  font-size: 16px !important;
+  color: #6b7c93 !important;
+  margin: 0 0 36px !important;
+  line-height: 1.5;
+  font-weight: 400 !important;
+  text-align: center;
+  background: none !important;
+  -webkit-text-fill-color: #6b7c93 !important;
+}
+
+.ha-subtitle strong {
+  color: #32325d !important;
+  font-weight: 600 !important;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+/* ─── MESSAGE BARS ─── */
+.ha-msg {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  margin-bottom: 24px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.ha-msg-err {
+  background: #fef2f2 !important;
+  color: #e25950 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.ha-msg-ok {
+  background: #ecfdf5 !important;
+  color: #0e9f6e !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+/* ─── FORM ─── */
+.ha-form {
+  text-align: left;
+}
+
+/* ─── LABEL ─── */
+.ha-label {
+  display: block;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #32325d !important;
+  margin-bottom: 8px;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+/* ─── INPUT ─── */
+.ha-input {
+  display: block;
+  width: 100%;
+  padding: 14px 16px !important;
+  font-size: 16px !important;
+  font-family: inherit !important;
+  color: #32325d !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e6ed !important;
+  border-radius: 6px !important;
+  outline: none !important;
+  transition: border-color 150ms, box-shadow 150ms;
+  box-shadow: 0 1px 3px rgba(50, 50, 93, 0.08), 0 1px 0 rgba(0, 0, 0, 0.02) !important;
+  margin-bottom: 24px;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+.ha-input:focus {
+  border-color: #635bff !important;
+  box-shadow:
+    0 1px 3px rgba(50, 50, 93, 0.08),
+    0 0 0 3px rgba(99, 91, 255, 0.12) !important;
+}
+
+.ha-input::placeholder {
+  color: #aab7c4 !important;
+  -webkit-text-fill-color: #aab7c4 !important;
+}
+
+.ha-input:disabled {
+  background: #f6f9fc !important;
+  cursor: not-allowed;
+}
+
+/* ─── PRIMARY BUTTON ─── */
+.ha-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 24px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  color: #ffffff !important;
+  background: #635bff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: background 150ms, transform 80ms, box-shadow 150ms;
+  box-shadow:
+    0 4px 6px rgba(50, 50, 93, 0.11),
+    0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  letter-spacing: 0.2px;
+  margin-bottom: 24px;
+  -webkit-text-fill-color: #ffffff !important;
+  min-height: 52px;
+}
+
+.ha-btn:hover:not(:disabled) {
+  background: #5851ea !important;
+  transform: translateY(-1px);
+  box-shadow:
+    0 7px 14px rgba(50, 50, 93, 0.1),
+    0 3px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.ha-btn:active:not(:disabled) {
+  transform: translateY(0);
+  background: #4f46e5 !important;
+}
+
+.ha-btn:disabled {
+  background: #aab7c4 !important;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none !important;
+}
+
+/* ─── SPINNER ─── */
+.ha-spin {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ha-rotate 0.6s linear infinite;
+}
+
+@keyframes ha-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── SWITCH LINK ─── */
+.ha-switch {
+  text-align: center;
+  font-size: 15px !important;
+  color: #6b7c93 !important;
+  margin: 0 !important;
+  -webkit-text-fill-color: #6b7c93 !important;
+}
+
+.ha-switch button {
+  background: none !important;
+  border: none !important;
+  color: #635bff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  cursor: pointer;
+  padding: 0;
+  -webkit-text-fill-color: #635bff !important;
+}
+
+.ha-switch button:hover {
+  text-decoration: underline;
+}
+
+/* ─── OTP ROW ─── */
+.ha-otp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.ha-otp-dash {
+  font-size: 18px !important;
+  color: #d1d5db !important;
+  margin: 0 4px;
+  user-select: none;
+  -webkit-text-fill-color: #d1d5db !important;
+}
+
+.ha-otp-box {
+  width: 58px;
+  height: 66px;
+  text-align: center;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace !important;
+  color: #32325d !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e6ed !important;
+  border-radius: 8px !important;
+  outline: none !important;
+  transition: border-color 150ms, box-shadow 150ms;
+  box-shadow: 0 1px 3px rgba(50, 50, 93, 0.08) !important;
+  padding: 0 !important;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+.ha-otp-box:focus {
+  border-color: #635bff !important;
+  box-shadow:
+    0 1px 3px rgba(50, 50, 93, 0.08),
+    0 0 0 3px rgba(99, 91, 255, 0.12) !important;
+}
+
+.ha-otp-box.filled {
+  border-color: #635bff !important;
+  background: #f8f7ff !important;
+}
+
+/* ─── DEMO BADGE ─── */
+.ha-demo {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #f0f4ff !important;
+  color: #635bff !important;
+  border: 1px solid #d6d3ff !important;
+  border-radius: 6px;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  margin-bottom: 24px;
+  text-align: center;
+  width: 100%;
+  -webkit-text-fill-color: #635bff !important;
+}
+
+.ha-demo strong {
+  font-weight: 700 !important;
+  letter-spacing: 3px;
+  font-family: monospace !important;
+  color: #32325d !important;
+  -webkit-text-fill-color: #32325d !important;
+}
+
+/* ─── OTP FOOTER ─── */
+.ha-otp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px !important;
+}
+
+.ha-timer {
+  color: #8898aa !important;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-fill-color: #8898aa !important;
+}
+
+.ha-link {
+  background: none !important;
+  border: none !important;
+  color: #635bff !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-family: inherit !important;
+  cursor: pointer;
+  padding: 0;
+  -webkit-text-fill-color: #635bff !important;
+}
+
+.ha-link:hover {
+  text-decoration: underline;
+}
+
+.ha-dot {
+  color: #d1d5db !important;
+  font-size: 10px !important;
+  -webkit-text-fill-color: #d1d5db !important;
+}
+
+/* ─── LEGAL ─── */
+.ha-legal {
+  margin-top: 28px !important;
+  font-size: 13px !important;
+  color: #8898aa !important;
+  text-align: center;
+  line-height: 1.6;
+  -webkit-text-fill-color: #8898aa !important;
+}
+
+.ha-legal a {
+  color: #635bff !important;
+  text-decoration: none;
+  -webkit-text-fill-color: #635bff !important;
+}
+
+.ha-legal a:hover {
+  text-decoration: underline;
+}
+
+/* ─── MOBILE ─── */
+@media (max-width: 560px) {
+  .ha-overlay {
+    align-items: stretch;
+    padding: 0 !important;
+  }
+
+  .ha-card {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 36px 28px;
+  }
+
+  .ha-otp-box {
+    width: 48px;
+    height: 54px;
+    font-size: 24px !important;
+  }
+}

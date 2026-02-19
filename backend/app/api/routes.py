@@ -1,11 +1,49 @@
 import time
+from typing import List, Dict, Optional
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
 from app.database.firebase import firebase_client
 from app.services.ai_service import ai_service
+from app.services.chatbot_service import chatbot_service
+from app.services.email_service import email_service
+from app.services.otp_service import otp_service
 from app.utils.image_processing import generate_thermal_image
 from app.utils.logger import logger
 
 router = APIRouter()
+
+
+# ─── Pydantic Models ─────────────────────────────────────
+class ChatMessage(BaseModel):
+    message: str
+    conversation_history: Optional[List[Dict[str, str]]] = None
+
+
+class ChatResponse(BaseModel):
+    response: str
+    critical_panels: List[Dict]
+    error: bool = False
+
+
+class EmailAlertRequest(BaseModel):
+    panel_id: str
+    diagnosis: str
+    power: float = 0
+    temperature: float = 0
+    zone: str = "Unknown"
+    priority: str = "critical"
+    estimated_cost: float = 0
+    recommended_action: str = ""
+
+
+class OTPRequest(BaseModel):
+    email: str
+    is_registration: bool = False
+
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    otp: str
 
 
 # ─── Health ──────────────────────────────────────────────
@@ -52,6 +90,25 @@ async def create_alert(alert: dict):
     alert["resolved"] = False
     result = await firebase_client.create_alert(alert)
     return {"message": "Alert created", "data": result}
+
+
+@router.post("/api/alerts/{alert_id}/clear")
+async def clear_alert(alert_id: str):
+    """Clear/resolve an alert"""
+    result = await firebase_client.update_alert(alert_id, {"resolved": True, "resolved_at": int(time.time() * 1000)})
+    return {"message": "Alert cleared", "alert_id": alert_id}
+
+
+@router.post("/api/panels/{panel_id}/clear-alert")
+async def clear_panel_alert(panel_id: str):
+    """Clear all alerts for a specific panel"""
+    panel = await firebase_client.get_panel(panel_id)
+    if not panel:
+        raise HTTPException(status_code=404, detail=f"Panel {panel_id} not found")
+    
+    # Update panel status
+    await firebase_client.update_panel(panel_id, {"status": "healthy", "alerts": []})
+    return {"message": "Alerts cleared", "panel_id": panel_id}
 
 
 # ─── Farm Statistics ─────────────────────────────────────
@@ -106,7 +163,7 @@ async def demo_analyze_panel(panel_id: str):
 
 
 @router.post("/api/analyze/virtual-el")
-async def analyze_virtual_el(panel_id: str = "A-001"):
+async def analyze_virtual_el(panel_id: str):
     from app.utils.image_processing import generate_virtual_el
     result = generate_virtual_el()
     return {
@@ -119,7 +176,7 @@ async def analyze_virtual_el(panel_id: str = "A-001"):
 
 
 @router.post("/api/analyze/thermal-diagnosis")
-async def analyze_thermal_diagnosis(panel_id: str = "A-001"):
+async def analyze_thermal_diagnosis(panel_id: str):
     panel = await firebase_client.get_panel(panel_id)
     temp = panel.get("temperature", 52.0) if panel else 52.0
     from app.utils.image_processing import analyze_thermal
@@ -128,7 +185,7 @@ async def analyze_thermal_diagnosis(panel_id: str = "A-001"):
 
 
 @router.post("/api/analyze/root-cause")
-async def analyze_root_cause(panel_id: str = "A-001"):
+async def analyze_root_cause(panel_id: str):
     panel = await firebase_client.get_panel(panel_id)
     if not panel:
         raise HTTPException(status_code=404, detail=f"Panel {panel_id} not found")
@@ -327,4 +384,184 @@ async def get_system_capabilities():
         ],
         "team": "Yashodip More, Tejas Patil, Jaykumar Girase, Komal Kumavat",
         "institution": "R.C. Patel Institute of Technology, Shirpur"
+    }
+
+
+# ─── Chatbot ─────────────────────────────────────────────
+@router.post("/api/chat", response_model=ChatResponse)
+async def chat_with_helios(chat_req: ChatMessage):
+    """
+    Chat with HELIOS AI Assistant about solar panel health and diagnostics.
+    The assistant has full context of all panels in the farm.
+    """
+    result = await chatbot_service.chat(
+        message=chat_req.message,
+        conversation_history=chat_req.conversation_history
+    )
+    return ChatResponse(**result)
+
+
+@router.get("/api/chat/summary")
+async def get_chat_summary():
+    """
+    Get a quick summary of farm status for chat initialization.
+    Returns critical panel count and basic metrics.
+    """
+    return await chatbot_service.get_quick_summary()
+
+
+@router.get("/api/chat/panel/{panel_id}")
+async def get_panel_for_chat(panel_id: str):
+    """Get detailed panel info formatted for chat context."""
+    detail = await chatbot_service.get_panel_detail(panel_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail=f"Panel {panel_id} not found")
+    return {"panel_id": panel_id, "detail": detail}
+
+
+# ─── Email Alerts ────────────────────────────────────────
+@router.post("/api/alerts/email")
+async def send_email_alert(req: EmailAlertRequest):
+    """
+    Send critical panel alert via email.
+    Requires SMTP configuration via environment variables:
+    - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+    - EMAIL_FROM, ALERT_EMAILS (comma-separated recipients)
+    """
+    if not email_service.is_configured():
+        raise HTTPException(
+            status_code=503, 
+            detail="Email service not configured. Set SMTP environment variables."
+        )
+    
+    success = await email_service.send_critical_alert(
+        panel_id=req.panel_id,
+        diagnosis=req.diagnosis,
+        power=req.power,
+        temperature=req.temperature,
+        zone=req.zone,
+        priority=req.priority,
+        estimated_cost=req.estimated_cost,
+        recommended_action=req.recommended_action
+    )
+    
+    if success:
+        return {"message": "Email alert sent successfully", "panel_id": req.panel_id}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send email alert")
+
+
+@router.post("/api/alerts/email/daily-summary")
+async def send_daily_summary_email():
+    """Send daily summary email with all panel statistics."""
+    if not email_service.is_configured():
+        raise HTTPException(
+            status_code=503, 
+            detail="Email service not configured"
+        )
+    
+    panels = await firebase_client.get_all_panels()
+    if not panels:
+        raise HTTPException(status_code=404, detail="No panels found")
+    
+    critical = [p for p in panels if p.get("status") == "critical"]
+    warning = [p for p in panels if p.get("status") == "warning"]
+    healthy = [p for p in panels if p.get("status") == "healthy"]
+    
+    total_power = sum(p.get("power", 0) for p in panels) / 1000
+    avg_eff = sum(p.get("efficiency", 0) for p in panels) / len(panels) if panels else 0
+    
+    success = await email_service.send_daily_summary(
+        total_panels=len(panels),
+        healthy_count=len(healthy),
+        warning_count=len(warning),
+        critical_count=len(critical),
+        total_power_kw=total_power,
+        avg_efficiency=avg_eff,
+        critical_panels=critical
+    )
+    
+    if success:
+        return {"message": "Daily summary email sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send summary email")
+
+
+@router.get("/api/alerts/email/status")
+async def get_email_service_status():
+    """Check if email service is configured."""
+    return {
+        "configured": email_service.is_configured(),
+        "smtp_host": email_service.smtp_host,
+        "recipients_count": len([r for r in email_service.alert_recipients if r])
+    }
+
+
+# ─── OTP Authentication ──────────────────────────────────
+@router.post("/api/auth/send-otp")
+async def send_otp(req: OTPRequest):
+    """
+    Send OTP to the given email address.
+    
+    For login: Set is_registration=False (default)
+    For registration: Set is_registration=True
+    """
+    if not req.email or "@" not in req.email:
+        raise HTTPException(status_code=400, detail="Invalid email address")
+    
+    result = await otp_service.send_otp(
+        email=req.email,
+        is_registration=req.is_registration
+    )
+    
+    if result["success"]:
+        return result
+    else:
+        raise HTTPException(status_code=500, detail=result["message"])
+
+
+@router.post("/api/auth/verify-otp")
+async def verify_otp(req: OTPVerifyRequest):
+    """
+    Verify the OTP and authenticate user.
+    
+    Returns user session info on success.
+    """
+    if not req.email or not req.otp:
+        raise HTTPException(status_code=400, detail="Email and OTP required")
+    
+    if len(req.otp) != 6 or not req.otp.isdigit():
+        raise HTTPException(status_code=400, detail="OTP must be 6 digits")
+    
+    result = otp_service.verify_otp(
+        email=req.email,
+        otp=req.otp
+    )
+    
+    if result["success"]:
+        # Generate session token (simple implementation)
+        import hashlib
+        import time
+        token = hashlib.sha256(f"{req.email}{time.time()}".encode()).hexdigest()[:32]
+        
+        return {
+            **result,
+            "token": token,
+            "user": {
+                "email": req.email,
+                "role": "operator",  # Default role
+                "name": req.email.split("@")[0].title()
+            }
+        }
+    else:
+        raise HTTPException(status_code=401, detail=result["message"])
+
+
+@router.get("/api/auth/status")
+async def get_auth_status():
+    """Check if authentication service is available."""
+    return {
+        "available": True,
+        "email_configured": otp_service.is_configured(),
+        "otp_expiry_minutes": otp_service.otp_expiry_minutes
     }

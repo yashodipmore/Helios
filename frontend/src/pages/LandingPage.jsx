@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import AuthModal from '../components/AuthModal';
 
 // Modern Hero Visual - Clean Dashboard Preview
 const HeroVisual = () => {
@@ -24,7 +25,7 @@ const HeroVisual = () => {
         {/* Main Stats Card */}
         <div className="preview-card main-card">
           <div className="card-header">
-            <span className="card-icon">☀️</span>
+            <span className="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
             <span className="card-title">Live Performance</span>
             <span className="status-live">● LIVE</span>
           </div>
@@ -46,7 +47,7 @@ const HeroVisual = () => {
             <svg viewBox="0 0 200 50" className="chart-line">
               <path 
                 d="M0,40 L20,35 L40,38 L60,25 L80,28 L100,15 L120,18 L140,10 L160,12 L180,8 L200,5" 
-                stroke="#FFB800" 
+                stroke="#111111" 
                 strokeWidth="2" 
                 fill="none"
               />
@@ -56,8 +57,8 @@ const HeroVisual = () => {
               />
               <defs>
                 <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#FFB800" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#FFB800" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#111111" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#111111" stopOpacity="0" />
                 </linearGradient>
               </defs>
             </svg>
@@ -120,25 +121,25 @@ const HeroVisual = () => {
 // Feature Icons
 const FeatureIcon1 = () => (
   <svg viewBox="0 0 64 64" fill="none" className="feature-icon">
-    <circle cx="32" cy="32" r="28" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-    <path d="M32 18V32L42 38" stroke="#FFB800" strokeWidth="3" strokeLinecap="round" />
-    <circle cx="32" cy="32" r="4" fill="#FFB800" />
+    <circle cx="32" cy="32" r="28" stroke="#111111" strokeWidth="2" fill="#11111110" />
+    <path d="M32 18V32L42 38" stroke="#111111" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="32" cy="32" r="4" fill="#111111" />
   </svg>
 );
 
 const FeatureIcon2 = () => (
   <svg viewBox="0 0 64 64" fill="none" className="feature-icon">
-    <rect x="12" y="20" width="40" height="28" rx="4" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-    <path d="M20 32L28 38L44 24" stroke="#FFB800" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="12" y="20" width="40" height="28" rx="4" stroke="#111111" strokeWidth="2" fill="#11111110" />
+    <path d="M20 32L28 38L44 24" stroke="#111111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const FeatureIcon3 = () => (
   <svg viewBox="0 0 64 64" fill="none" className="feature-icon">
-    <circle cx="32" cy="20" r="10" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-    <path d="M16 52C16 42 23 36 32 36C41 36 48 42 48 52" stroke="#FFB800" strokeWidth="2" fill="none" />
-    <circle cx="20" cy="44" r="6" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-    <circle cx="44" cy="44" r="6" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
+    <circle cx="32" cy="20" r="10" stroke="#111111" strokeWidth="2" fill="#11111110" />
+    <path d="M16 52C16 42 23 36 32 36C41 36 48 42 48 52" stroke="#111111" strokeWidth="2" fill="none" />
+    <circle cx="20" cy="44" r="6" stroke="#111111" strokeWidth="2" fill="#11111110" />
+    <circle cx="44" cy="44" r="6" stroke="#111111" strokeWidth="2" fill="#11111110" />
   </svg>
 );
 
@@ -161,17 +162,64 @@ const CountUp = ({ end, suffix = '', duration = 2000 }) => {
 };
 
 export default function LandingPage({ onEnterDashboard }) {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Check for existing auth on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('helios_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('helios_user');
+        localStorage.removeItem('helios_token');
+      }
+    }
+  }, []);
+
+  // Fix body background for landing page
+  useEffect(() => {
+    document.body.style.background = '#F0F1F3';
+    return () => { document.body.style.background = ''; };
+  }, []);
+
+  const handleAuthSuccess = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('helios_user');
+    localStorage.removeItem('helios_token');
+    setUser(null);
+  };
+
+  const handleDashboardClick = () => {
+    if (user) {
+      onEnterDashboard();
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <div className="landing-page">
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-container">
           <div className="nav-logo">
             <svg viewBox="0 0 40 40" className="logo-icon">
-              <circle cx="20" cy="20" r="18" fill="#FFB800" />
+              <circle cx="20" cy="20" r="18" fill="#111111" />
               <path d="M20 8L25 16H15L20 8Z" fill="white" />
               <circle cx="20" cy="24" r="8" fill="white" />
-              <circle cx="20" cy="24" r="4" fill="#FFB800" />
+              <circle cx="20" cy="24" r="4" fill="#111111" />
             </svg>
             <span className="logo-text">HELIOS AI</span>
           </div>
@@ -183,12 +231,27 @@ export default function LandingPage({ onEnterDashboard }) {
             <a href="#team">Team</a>
           </div>
           
-          <button className="nav-cta" onClick={onEnterDashboard}>
-            Open Dashboard
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          {user ? (
+            <div className="nav-user">
+              <span className="user-name">Hi, {user.name}</span>
+              <button className="nav-cta" onClick={onEnterDashboard}>
+                Open Dashboard
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+              <button className="nav-logout" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button className="nav-cta" onClick={handleDashboardClick}>
+              Login / Register
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -299,9 +362,9 @@ export default function LandingPage({ onEnterDashboard }) {
               <div className="innovation-number">01</div>
               <div className="innovation-icon">
                 <svg viewBox="0 0 80 80" fill="none">
-                  <rect x="10" y="15" width="60" height="50" rx="4" stroke="#FFB800" strokeWidth="2" />
-                  <path d="M25 35L35 45L55 25" stroke="#FFB800" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="65" cy="20" r="12" fill="#FFB800" />
+                  <rect x="10" y="15" width="60" height="50" rx="4" stroke="#111111" strokeWidth="2" />
+                  <path d="M25 35L35 45L55 25" stroke="#111111" strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="65" cy="20" r="12" fill="#111111" />
                   <path d="M65 15V25M60 20H70" stroke="white" strokeWidth="2" />
                 </svg>
               </div>
@@ -321,13 +384,13 @@ export default function LandingPage({ onEnterDashboard }) {
               <div className="innovation-number">02</div>
               <div className="innovation-icon">
                 <svg viewBox="0 0 80 80" fill="none">
-                  <circle cx="40" cy="35" r="20" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-                  <path d="M30 35C30 35 35 45 40 45C45 45 50 35 50 35" stroke="#FFB800" strokeWidth="2" />
-                  <circle cx="35" cy="30" r="3" fill="#FFB800" />
-                  <circle cx="45" cy="30" r="3" fill="#FFB800" />
-                  <path d="M20 60H60" stroke="#FFB800" strokeWidth="2" />
-                  <path d="M25 65H55" stroke="#FFB800" strokeWidth="2" />
-                  <path d="M30 70H50" stroke="#FFB800" strokeWidth="2" />
+                  <circle cx="40" cy="35" r="20" stroke="#111111" strokeWidth="2" fill="#11111115" />
+                  <path d="M30 35C30 35 35 45 40 45C45 45 50 35 50 35" stroke="#111111" strokeWidth="2" />
+                  <circle cx="35" cy="30" r="3" fill="#111111" />
+                  <circle cx="45" cy="30" r="3" fill="#111111" />
+                  <path d="M20 60H60" stroke="#111111" strokeWidth="2" />
+                  <path d="M25 65H55" stroke="#111111" strokeWidth="2" />
+                  <path d="M30 70H50" stroke="#111111" strokeWidth="2" />
                 </svg>
               </div>
               <h3 className="innovation-title">Explainable AI</h3>
@@ -346,13 +409,13 @@ export default function LandingPage({ onEnterDashboard }) {
               <div className="innovation-number">03</div>
               <div className="innovation-icon">
                 <svg viewBox="0 0 80 80" fill="none">
-                  <circle cx="25" cy="25" r="12" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-                  <circle cx="55" cy="25" r="12" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-                  <circle cx="40" cy="55" r="12" stroke="#FFB800" strokeWidth="2" fill="#FFB80015" />
-                  <path d="M33 32L35 45" stroke="#FFB800" strokeWidth="2" />
-                  <path d="M47 32L45 45" stroke="#FFB800" strokeWidth="2" />
-                  <path d="M37 25H43" stroke="#FFB800" strokeWidth="2" />
-                  <circle cx="40" cy="40" r="6" fill="#FFB800" />
+                  <circle cx="25" cy="25" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
+                  <circle cx="55" cy="25" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
+                  <circle cx="40" cy="55" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
+                  <path d="M33 32L35 45" stroke="#111111" strokeWidth="2" />
+                  <path d="M47 32L45 45" stroke="#111111" strokeWidth="2" />
+                  <path d="M37 25H43" stroke="#111111" strokeWidth="2" />
+                  <circle cx="40" cy="40" r="6" fill="#111111" />
                 </svg>
               </div>
               <h3 className="innovation-title">Multi-Modal Fusion</h3>
@@ -494,10 +557,10 @@ export default function LandingPage({ onEnterDashboard }) {
           <div className="footer-brand">
             <div className="footer-logo">
               <svg viewBox="0 0 40 40" className="logo-icon">
-                <circle cx="20" cy="20" r="18" fill="#FFB800" />
+                <circle cx="20" cy="20" r="18" fill="#111111" />
                 <path d="M20 8L25 16H15L20 8Z" fill="white" />
                 <circle cx="20" cy="24" r="8" fill="white" />
-                <circle cx="20" cy="24" r="4" fill="#FFB800" />
+                <circle cx="20" cy="24" r="4" fill="#111111" />
               </svg>
               <span>HELIOS AI</span>
             </div>
