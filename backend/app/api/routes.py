@@ -497,64 +497,127 @@ async def get_email_service_status():
     }
 
 
-# ─── OTP Authentication ──────────────────────────────────
-@router.post("/api/auth/send-otp")
-async def send_otp(req: OTPRequest):
+# ─── Email/Password Authentication ──────────────────────────────
+import hashlib
+
+# Simple in-memory user store (in production, use Firebase/database)
+_users_store = {}
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+def _hash_password(password: str) -> str:
+    """Hash password with SHA256."""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+def _generate_token(email: str) -> str:
+    """Generate session token."""
+    return hashlib.sha256(f"{email}{time.time()}".encode()).hexdigest()[:32]
+
+
+@router.post("/api/auth/register")
+async def register_user(req: RegisterRequest):
     """
-    Send OTP to the given email address.
-    
-    For login: Set is_registration=False (default)
-    For registration: Set is_registration=True
+    Register a new user with email and password.
     """
     if not req.email or "@" not in req.email:
         raise HTTPException(status_code=400, detail="Invalid email address")
     
-    result = await otp_service.send_otp(
-        email=req.email,
-        is_registration=req.is_registration
-    )
+    if not req.password or len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
-    if result["success"]:
-        return result
-    else:
-        raise HTTPException(status_code=500, detail=result["message"])
-
-
-@router.post("/api/auth/verify-otp")
-async def verify_otp(req: OTPVerifyRequest):
-    """
-    Verify the OTP and authenticate user.
+    if not req.name or not req.name.strip():
+        raise HTTPException(status_code=400, detail="Name is required")
     
-    Returns user session info on success.
-    """
-    if not req.email or not req.otp:
-        raise HTTPException(status_code=400, detail="Email and OTP required")
+    email_lower = req.email.lower()
     
-    if len(req.otp) != 6 or not req.otp.isdigit():
-        raise HTTPException(status_code=400, detail="OTP must be 6 digits")
+    # Check if user exists
+    if email_lower in _users_store:
+        raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
     
-    result = otp_service.verify_otp(
-        email=req.email,
-        otp=req.otp
-    )
+    # Store user
+    _users_store[email_lower] = {
+        "email": email_lower,
+        "password_hash": _hash_password(req.password),
+        "name": req.name.strip(),
+        "role": "operator",
+        "created_at": time.time()
+    }
     
-    if result["success"]:
-        # Generate session token (simple implementation)
-        import hashlib
-        import time
-        token = hashlib.sha256(f"{req.email}{time.time()}".encode()).hexdigest()[:32]
-        
-        return {
-            **result,
-            "token": token,
-            "user": {
-                "email": req.email,
-                "role": "operator",  # Default role
-                "name": req.email.split("@")[0].title()
-            }
+    # Generate token
+    token = _generate_token(email_lower)
+    
+    logger.info(f"New user registered: {email_lower}")
+    
+    return {
+        "success": True,
+        "message": "Account created successfully",
+        "token": token,
+        "user": {
+            "email": email_lower,
+            "name": req.name.strip(),
+            "role": "operator"
         }
-    else:
-        raise HTTPException(status_code=401, detail=result["message"])
+    }
+
+
+@router.post("/api/auth/login")
+async def login_user(req: LoginRequest):
+    """
+    Login with email and password.
+    """
+    if not req.email or "@" not in req.email:
+        raise HTTPException(status_code=400, detail="Invalid email address")
+    
+    if not req.password:
+        raise HTTPException(status_code=400, detail="Password is required")
+    
+    email_lower = req.email.lower()
+    
+    # Check if user exists
+    user = _users_store.get(email_lower)
+    
+    if not user:
+        # For demo: auto-create user on first login
+        _users_store[email_lower] = {
+            "email": email_lower,
+            "password_hash": _hash_password(req.password),
+            "name": email_lower.split("@")[0].title(),
+            "role": "operator",
+            "created_at": time.time()
+        }
+        user = _users_store[email_lower]
+        logger.info(f"Auto-created user: {email_lower}")
+    
+    # Verify password
+    if user["password_hash"] != _hash_password(req.password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Generate token
+    token = _generate_token(email_lower)
+    
+    logger.info(f"User logged in: {email_lower}")
+    
+    return {
+        "success": True,
+        "message": "Login successful",
+        "token": token,
+        "user": {
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"]
+        }
+    }
 
 
 @router.get("/api/auth/status")
@@ -562,6 +625,6 @@ async def get_auth_status():
     """Check if authentication service is available."""
     return {
         "available": True,
-        "email_configured": otp_service.is_configured(),
-        "otp_expiry_minutes": otp_service.otp_expiry_minutes
+        "method": "email_password",
+        "users_count": len(_users_store)
     }
