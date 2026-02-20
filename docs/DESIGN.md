@@ -1,4 +1,4 @@
-<![CDATA[# 🎨 HELIOS AI - Design System
+# 🎨 HELIOS AI - Design System
 
 ## Design Philosophy
 
