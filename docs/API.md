@@ -1,4 +1,4 @@
-<![CDATA[# 📡 HELIOS AI - API Reference
+# 📡 HELIOS AI - API Reference
 
 ## Base URL
 
