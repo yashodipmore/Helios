@@ -6,7 +6,6 @@ from app.database.firebase import firebase_client
 from app.services.ai_service import ai_service
 from app.services.chatbot_service import chatbot_service
 from app.services.email_service import email_service
-from app.services.otp_service import otp_service
 from app.utils.image_processing import generate_thermal_image
 from app.utils.logger import logger
 
@@ -34,16 +33,6 @@ class EmailAlertRequest(BaseModel):
     priority: str = "critical"
     estimated_cost: float = 0
     recommended_action: str = ""
-
-
-class OTPRequest(BaseModel):
-    email: str
-    is_registration: bool = False
-
-
-class OTPVerifyRequest(BaseModel):
-    email: str
-    otp: str
 
 
 # ─── Health ──────────────────────────────────────────────
@@ -496,135 +485,3 @@ async def get_email_service_status():
         "recipients_count": len([r for r in email_service.alert_recipients if r])
     }
 
-
-# ─── Email/Password Authentication ──────────────────────────────
-import hashlib
-
-# Simple in-memory user store (in production, use Firebase/database)
-_users_store = {}
-
-
-class RegisterRequest(BaseModel):
-    email: str
-    password: str
-    name: str
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
-def _hash_password(password: str) -> str:
-    """Hash password with SHA256."""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
-def _generate_token(email: str) -> str:
-    """Generate session token."""
-    return hashlib.sha256(f"{email}{time.time()}".encode()).hexdigest()[:32]
-
-
-@router.post("/api/auth/register")
-async def register_user(req: RegisterRequest):
-    """
-    Register a new user with email and password.
-    """
-    if not req.email or "@" not in req.email:
-        raise HTTPException(status_code=400, detail="Invalid email address")
-    
-    if not req.password or len(req.password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
-    
-    if not req.name or not req.name.strip():
-        raise HTTPException(status_code=400, detail="Name is required")
-    
-    email_lower = req.email.lower()
-    
-    # Check if user exists
-    if email_lower in _users_store:
-        raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
-    
-    # Store user
-    _users_store[email_lower] = {
-        "email": email_lower,
-        "password_hash": _hash_password(req.password),
-        "name": req.name.strip(),
-        "role": "operator",
-        "created_at": time.time()
-    }
-    
-    # Generate token
-    token = _generate_token(email_lower)
-    
-    logger.info(f"New user registered: {email_lower}")
-    
-    return {
-        "success": True,
-        "message": "Account created successfully",
-        "token": token,
-        "user": {
-            "email": email_lower,
-            "name": req.name.strip(),
-            "role": "operator"
-        }
-    }
-
-
-@router.post("/api/auth/login")
-async def login_user(req: LoginRequest):
-    """
-    Login with email and password.
-    """
-    if not req.email or "@" not in req.email:
-        raise HTTPException(status_code=400, detail="Invalid email address")
-    
-    if not req.password:
-        raise HTTPException(status_code=400, detail="Password is required")
-    
-    email_lower = req.email.lower()
-    
-    # Check if user exists
-    user = _users_store.get(email_lower)
-    
-    if not user:
-        # For demo: auto-create user on first login
-        _users_store[email_lower] = {
-            "email": email_lower,
-            "password_hash": _hash_password(req.password),
-            "name": email_lower.split("@")[0].title(),
-            "role": "operator",
-            "created_at": time.time()
-        }
-        user = _users_store[email_lower]
-        logger.info(f"Auto-created user: {email_lower}")
-    
-    # Verify password
-    if user["password_hash"] != _hash_password(req.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Generate token
-    token = _generate_token(email_lower)
-    
-    logger.info(f"User logged in: {email_lower}")
-    
-    return {
-        "success": True,
-        "message": "Login successful",
-        "token": token,
-        "user": {
-            "email": user["email"],
-            "name": user["name"],
-            "role": user["role"]
-        }
-    }
-
-
-@router.get("/api/auth/status")
-async def get_auth_status():
-    """Check if authentication service is available."""
-    return {
-        "available": True,
-        "method": "email_password",
-        "users_count": len(_users_store)
-    }

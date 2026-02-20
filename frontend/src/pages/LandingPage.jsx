@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import AuthModal from '../components/AuthModal';
 
 // Modern Hero Visual - Clean Dashboard Preview
 const HeroVisual = () => {
@@ -162,21 +161,6 @@ const CountUp = ({ end, suffix = '', duration = 2000 }) => {
 };
 
 export default function LandingPage({ onEnterDashboard }) {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [user, setUser] = useState(null);
-
-  // Check for existing auth on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('helios_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('helios_user');
-        localStorage.removeItem('helios_token');
-      }
-    }
-  }, []);
 
   // Fix body background for landing page
   useEffect(() => {
@@ -184,33 +168,8 @@ export default function LandingPage({ onEnterDashboard }) {
     return () => { document.body.style.background = ''; };
   }, []);
 
-  const handleAuthSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('helios_user');
-    localStorage.removeItem('helios_token');
-    setUser(null);
-  };
-
-  const handleDashboardClick = () => {
-    if (user) {
-      onEnterDashboard();
-    } else {
-      setShowAuthModal(true);
-    }
-  };
-
   return (
     <div className="landing-page">
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
-
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-container">
@@ -231,27 +190,12 @@ export default function LandingPage({ onEnterDashboard }) {
             <a href="#team">Team</a>
           </div>
           
-          {user ? (
-            <div className="nav-user">
-              <span className="user-name">Hi, {user.name}</span>
-              <button className="nav-cta" onClick={onEnterDashboard}>
-                Open Dashboard
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
-              <button className="nav-logout" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          ) : (
-            <button className="nav-cta" onClick={handleDashboardClick}>
-              Login / Register
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
+          <button className="nav-cta" onClick={onEnterDashboard}>
+            Open Dashboard
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </nav>
 
