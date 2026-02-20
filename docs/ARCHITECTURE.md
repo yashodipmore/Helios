@@ -1,4 +1,4 @@
-<![CDATA[# 🏗️ HELIOS AI - System Architecture
+# 🏗️ HELIOS AI - System Architecture
 
 ## Overview
 
