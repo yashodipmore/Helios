@@ -1,4 +1,4 @@
-<![CDATA[# ⚙️ HELIOS AI - Implementation Guide
+# ⚙️ HELIOS AI - Implementation Guide
 
 ## Overview
 
