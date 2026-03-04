@@ -391,4 +391,3 @@ Project ID: **TG0912740**
 **HELIOS AI** - *Powering the Solar Revolution with Artificial Intelligence*
 
 </div>
-]]>
