@@ -1,5 +1,154 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Innovation Carousel Component
+const InnovationCarousel = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const innovations = [
+    {
+      number: "01",
+      icon: (
+        <svg viewBox="0 0 80 80" fill="none">
+          <rect x="10" y="15" width="60" height="50" rx="4" stroke="currentColor" strokeWidth="2" />
+          <path d="M25 35L35 45L55 25" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="65" cy="20" r="12" fill="currentColor" />
+          <path d="M65 15V25M60 20H70" stroke="white" strokeWidth="2" />
+        </svg>
+      ),
+      title: "Virtual EL Imaging",
+      description: "Generate Electroluminescence images from standard RGB photos using conditional GANs. No shutdown, no darkness, no expensive cameras.",
+      benefits: [
+        "Works during daylight operation",
+        "Eliminates ₹5-10 lakh camera cost",
+        "96% faster than traditional methods"
+      ],
+      featured: false
+    },
+    {
+      number: "02",
+      icon: (
+        <svg viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="35" r="20" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1" />
+          <path d="M30 35C30 35 35 45 40 45C45 45 50 35 50 35" stroke="currentColor" strokeWidth="2" />
+          <circle cx="35" cy="30" r="3" fill="currentColor" />
+          <circle cx="45" cy="30" r="3" fill="currentColor" />
+          <path d="M20 60H60" stroke="currentColor" strokeWidth="2" />
+          <path d="M25 65H55" stroke="currentColor" strokeWidth="2" />
+          <path d="M30 70H50" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      ),
+      title: "Explainable AI",
+      description: "Vision-Language Models provide natural language diagnostics that operators can understand without specialized training.",
+      benefits: [
+        "Human-readable explanations",
+        "70% reduction in training time",
+        "Transparent decision-making"
+      ],
+      featured: true
+    },
+    {
+      number: "03",
+      icon: (
+        <svg viewBox="0 0 80 80" fill="none">
+          <circle cx="25" cy="25" r="12" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1" />
+          <circle cx="55" cy="25" r="12" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1" />
+          <circle cx="40" cy="55" r="12" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1" />
+          <path d="M33 32L35 45" stroke="currentColor" strokeWidth="2" />
+          <path d="M47 32L45 45" stroke="currentColor" strokeWidth="2" />
+          <path d="M37 25H43" stroke="currentColor" strokeWidth="2" />
+          <circle cx="40" cy="40" r="6" fill="currentColor" />
+        </svg>
+      ),
+      title: "Multi-Modal Fusion",
+      description: "LLM synthesizes electrical, thermal, visual, and environmental data for accurate root cause analysis.",
+      benefits: [
+        "Prevents wrong diagnosis",
+        "97% cost reduction",
+        "Actionable recommendations"
+      ],
+      featured: false
+    }
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % innovations.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + innovations.length) % innovations.length);
+  };
+
+  // Auto-advance carousel
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="innovation-section" id="technology">
+      <div className="section-container">
+        <span className="section-tag-center">THREE BREAKTHROUGH INNOVATIONS</span>
+        <h2 className="section-title-center">
+          World-First AI Technologies
+        </h2>
+        
+        <div className="carousel-container">
+          <button className="carousel-btn carousel-btn-prev" onClick={prevSlide} aria-label="Previous slide">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div className="carousel-track">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlide}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="carousel-slide"
+              >
+                <div className={`innovation-card ${innovations[currentSlide].featured ? 'featured' : ''}`}>
+                  <div className="innovation-number">{innovations[currentSlide].number}</div>
+                  <div className="innovation-icon">
+                    {innovations[currentSlide].icon}
+                  </div>
+                  <h3 className="innovation-title">{innovations[currentSlide].title}</h3>
+                  <p className="innovation-desc">{innovations[currentSlide].description}</p>
+                  <ul className="innovation-benefits">
+                    {innovations[currentSlide].benefits.map((benefit, idx) => (
+                      <li key={idx}>{benefit}</li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <button className="carousel-btn carousel-btn-next" onClick={nextSlide} aria-label="Next slide">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Carousel Indicators */}
+        <div className="carousel-indicators">
+          {innovations.map((_, index) => (
+            <button
+              key={index}
+              className={`carousel-indicator ${currentSlide === index ? 'active' : ''}`}
+              onClick={() => setCurrentSlide(index)}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // Modern Hero Visual - Clean Dashboard Preview
 const HeroVisual = () => {
@@ -276,14 +425,31 @@ export default function LandingPage({ onEnterDashboard }) {
               
               <div className="problem-stats">
                 <div className="problem-stat">
+                  <div className="problem-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
                   <span className="problem-stat-value">70+</span>
                   <span className="problem-stat-label">GW Installed Capacity</span>
                 </div>
                 <div className="problem-stat">
+                  <div className="problem-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                  </div>
                   <span className="problem-stat-value">15-20%</span>
                   <span className="problem-stat-label">Energy Lost to Faults</span>
                 </div>
                 <div className="problem-stat">
+                  <div className="problem-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
                   <span className="problem-stat-value">₹2000</span>
                   <span className="problem-stat-label">Per Panel Inspection</span>
                 </div>
@@ -294,88 +460,7 @@ export default function LandingPage({ onEnterDashboard }) {
       </section>
 
       {/* Innovation Section */}
-      <section className="innovation-section" id="technology">
-        <div className="section-container">
-          <span className="section-tag-center">THREE BREAKTHROUGH INNOVATIONS</span>
-          <h2 className="section-title-center">
-            World-First AI Technologies
-          </h2>
-          
-          <div className="innovation-grid">
-            <div className="innovation-card">
-              <div className="innovation-number">01</div>
-              <div className="innovation-icon">
-                <svg viewBox="0 0 80 80" fill="none">
-                  <rect x="10" y="15" width="60" height="50" rx="4" stroke="#111111" strokeWidth="2" />
-                  <path d="M25 35L35 45L55 25" stroke="#111111" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="65" cy="20" r="12" fill="#111111" />
-                  <path d="M65 15V25M60 20H70" stroke="white" strokeWidth="2" />
-                </svg>
-              </div>
-              <h3 className="innovation-title">Virtual EL Imaging</h3>
-              <p className="innovation-desc">
-                Generate Electroluminescence images from standard RGB photos using 
-                conditional GANs. No shutdown, no darkness, no expensive cameras.
-              </p>
-              <ul className="innovation-benefits">
-                <li>Works during daylight operation</li>
-                <li>Eliminates ₹5-10 lakh camera cost</li>
-                <li>96% faster than traditional methods</li>
-              </ul>
-            </div>
-            
-            <div className="innovation-card featured">
-              <div className="innovation-number">02</div>
-              <div className="innovation-icon">
-                <svg viewBox="0 0 80 80" fill="none">
-                  <circle cx="40" cy="35" r="20" stroke="#111111" strokeWidth="2" fill="#11111115" />
-                  <path d="M30 35C30 35 35 45 40 45C45 45 50 35 50 35" stroke="#111111" strokeWidth="2" />
-                  <circle cx="35" cy="30" r="3" fill="#111111" />
-                  <circle cx="45" cy="30" r="3" fill="#111111" />
-                  <path d="M20 60H60" stroke="#111111" strokeWidth="2" />
-                  <path d="M25 65H55" stroke="#111111" strokeWidth="2" />
-                  <path d="M30 70H50" stroke="#111111" strokeWidth="2" />
-                </svg>
-              </div>
-              <h3 className="innovation-title">Explainable AI</h3>
-              <p className="innovation-desc">
-                Vision-Language Models provide natural language diagnostics 
-                that operators can understand without specialized training.
-              </p>
-              <ul className="innovation-benefits">
-                <li>Human-readable explanations</li>
-                <li>70% reduction in training time</li>
-                <li>Transparent decision-making</li>
-              </ul>
-            </div>
-            
-            <div className="innovation-card">
-              <div className="innovation-number">03</div>
-              <div className="innovation-icon">
-                <svg viewBox="0 0 80 80" fill="none">
-                  <circle cx="25" cy="25" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
-                  <circle cx="55" cy="25" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
-                  <circle cx="40" cy="55" r="12" stroke="#111111" strokeWidth="2" fill="#11111115" />
-                  <path d="M33 32L35 45" stroke="#111111" strokeWidth="2" />
-                  <path d="M47 32L45 45" stroke="#111111" strokeWidth="2" />
-                  <path d="M37 25H43" stroke="#111111" strokeWidth="2" />
-                  <circle cx="40" cy="40" r="6" fill="#111111" />
-                </svg>
-              </div>
-              <h3 className="innovation-title">Multi-Modal Fusion</h3>
-              <p className="innovation-desc">
-                LLM synthesizes electrical, thermal, visual, and environmental 
-                data for accurate root cause analysis.
-              </p>
-              <ul className="innovation-benefits">
-                <li>Prevents wrong diagnosis</li>
-                <li>97% cost reduction</li>
-                <li>Actionable recommendations</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+      <InnovationCarousel />
 
       {/* Tech Stack Section */}
       <section className="tech-section">
